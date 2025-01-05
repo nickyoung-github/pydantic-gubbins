@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pydantic-gubbins"
+description = "Various helpful extensions for working with pydantic"
+authors = [
+    {name = "Nick Young", email = "nick.young.github@gmail.com"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+
+requires-python = ">=3.11"
+
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python 3",
+    "Operating System :: OS Independent"
+]
+
+dynamic = ["version"]
+
+dependencies = [
+    "frozendict",
+    "pydantic",
+    "setuptools",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov"
+]
