@@ -25,7 +25,7 @@ class ModelMetaclass(_ModelMetaClass):
         if descriptors:
             namespace["__dict__"] = DictDescriptor()
 
-        ret = ModelMetaclass.__new__(cls, cls_name, bases, namespace, **kwargs)
+        ret = super().__new__(cls, cls_name, bases, namespace, **kwargs)
 
         if descriptors:
             # We need this step as collect_model_fields() deletes descriptors
