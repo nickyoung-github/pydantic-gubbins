@@ -2,7 +2,7 @@ from functools import cached_property
 from itertools import chain
 from pydantic import BaseModel as _BaseModel, SerializerFunctionWrapHandler, model_serializer
 from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaClass
-from typing import Any
+from typing import Any, ClassVar
 
 from .descriptors import DictDescriptor
 
@@ -14,14 +14,14 @@ class ModelMetaclass(_ModelMetaClass):
         for base in bases:
             if issubclass(base, _BaseModel):
                 for name in getattr(base, "__pydantic_descriptor_fields__", ()):
-                    if name in base.__annotations__:
-                        descriptors[name] = object.__getattribute__(base, name)
+                    descriptors[name] = object.__getattribute__(base, name)
 
         for name, typ in namespace.get("__annotations__", {}).items():
             value = namespace.get(name)
             if hasattr(value, "__get__") and not isinstance(value, (property, cached_property)):
                 descriptors[name] = value
 
+        namespace["__pydantic_descriptor_fields__"] = frozenset(descriptors.keys())
         if descriptors:
             namespace["__dict__"] = DictDescriptor()
 
@@ -39,11 +39,11 @@ class ModelMetaclass(_ModelMetaClass):
 
                 setattr(ret, name, descriptor)
 
-        setattr(ret, "__pydantic_descriptor_fields__", frozenset(descriptors.keys()))
-
         return ret
 
 class BaseModel(_BaseModel, metaclass=ModelMetaclass):
+    __pydantic_descriptor_fields__: ClassVar[frozenset[str]]
+
     def __setattr__(self, key, value):
         if key in self.__pydantic_descriptor_fields__:
             # BaseModel overrides __setattr__ and calls self.__dict__[key] = value
@@ -61,13 +61,11 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
     def __eq__(self, other):
         return super().__eq__(other) and\
-            all(v1 == v2 for _, v1, _, v2 in zip(self.__descriptor_items(), other.__descriptor_items()))
+            all(v1 == v2 for (_, v1), (_, v2) in zip(self.__descriptor_items(), other.__descriptor_items()))
 
     @model_serializer(mode='wrap')
     def include_descriptors(self, handler: SerializerFunctionWrapHandler) -> Any:
-        value = handler(self)
-        value.update(self.__descriptor_items())
-        return value
+        return {**handler(self), **dict(self.__descriptor_items())}
 
     def __repr_args__(self):
         yield from (kv for kv in chain(self.__descriptor_items(), super().__repr_args__()))

@@ -3,7 +3,7 @@ from frozendict import frozendict
 from pydantic import BaseModel, Discriminator, GetCoreSchemaHandler, GetJsonSchemaHandler, Tag, WrapSerializer
 from pydantic.json_schema import JsonSchemaValue
 import pydantic_core.core_schema as core_schema
-from typing import _SpecialForm, Annotated, Any, Iterable, TypeVar, Union as _Union, get_args
+from typing import _SpecialForm, Annotated, Any, Iterable, TypeVar, Union as _Union, get_args, get_origin
 
 
 TYPE_FIELD = "t_"
@@ -49,11 +49,12 @@ def DiscriminatedUnion(_cls, types: Iterable[type]):
     """
     args = ()
     for typ in types:
-        if not issubclass(typ, BaseModel) and not is_dataclass(typ):
+        test_typ = get_args(typ)[0] if get_origin(typ) is Annotated else typ
+        if not issubclass(test_typ, BaseModel) and not is_dataclass(test_typ):
             raise RuntimeError(f"DiscriminatedUnion may only be used with BaseModel or dataclass types")
         args += (Annotated[typ, Tag(__get_type_name(typ))],)
 
-    return Annotated[Union[args], UnionSchemaWithType, WrapSerializer(__add_tag_name), Discriminator(__get_tag_name)]
+    return Annotated[_Union[args], UnionSchemaWithType, WrapSerializer(__add_tag_name), Discriminator(__get_tag_name)]
 
 
 @_SpecialForm
@@ -89,7 +90,8 @@ def Union(_cls, types: Iterable[type]):
     other_types = ()
 
     for typ in types:
-        if issubclass(typ, BaseModel) or is_dataclass(typ):
+        test_typ = get_args(typ)[0] if get_origin(typ) is Annotated else typ
+        if issubclass(test_typ, BaseModel) or is_dataclass(test_typ):
             model_types += (typ,)
         else:
             other_types += (typ,)
