@@ -75,7 +75,7 @@ and populates `__pydantic_descriptor_fields__` on the model class
 to cover descriptor fields
 3. Access to `__dict__` itself is now controlled by a descriptor. This implementation is rather low-level and possibly
 inadvisable. The same result might be achieved by using a model validator, however, there are many places
-in `pydantic` and `pydantic-core` where `__dict__` is acceesed directly and I'm not convinced all would be covered by
+in `pydantic` and `pydantic-core` where `__dict__` is accessed directly and I'm not convinced all would be covered by
 a validator
 
 Using the `BaseModel` supplied by this project, the below works:
