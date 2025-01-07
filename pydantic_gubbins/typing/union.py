@@ -8,23 +8,24 @@ from typing import _SpecialForm, Annotated, Any, Iterable, TypeVar, Union as _Un
 
 TYPE_FIELD = "t_"
 
+def get_type_name(typ: type) -> str:
+    return getattr(typ, TYPE_FIELD, typ.__name__)
+
 
 class UnionSchemaWithType:
-    @classmethod
-    def __get_pydantic_json_schema__(cls,
+    def __init__(self, types: tuple[type, ...]):
+        self.__types = types
+
+    def __get_pydantic_json_schema__(self,
                                      core_schema_: core_schema. CoreSchema,
                                      handler: GetJsonSchemaHandler) -> JsonSchemaValue:
         json_schema = handler.resolve_ref_schema(handler(core_schema_))
 
-        for ref in json_schema["oneOf"]:
+        for idx, ref in enumerate(json_schema["oneOf"]):
             defn = handler.resolve_ref_schema(ref)
-            defn["properties"][TYPE_FIELD] = {"title": "Type", "type": "string"}
+            defn["properties"][TYPE_FIELD] = {"title": "Type", "enum": [get_type_name(self.__types[idx])]}
 
         return json_schema
-
-
-def get_type_name(typ: type) -> str:
-    return getattr(typ, TYPE_FIELD, typ.__name__)
 
 
 def __add_tag_name(value, handler, _info) -> dict[str, Any]:
@@ -48,13 +49,16 @@ def DiscriminatedUnion(_cls, types: Iterable[type]):
     A tagged union of types, using tge class var TYPE_KEY as the tag name, falling back to class name, if not present
     """
     args = ()
+    param_types = ()
     for typ in types:
-        test_typ = get_args(typ)[0] if get_origin(typ) is Annotated else typ
-        if not issubclass(test_typ, BaseModel) and not is_dataclass(test_typ):
+        param_type = get_args(typ)[0] if get_origin(typ) is Annotated else typ
+        if not issubclass(param_type, BaseModel) and not is_dataclass(param_type):
             raise RuntimeError(f"DiscriminatedUnion may only be used with BaseModel or dataclass types")
         args += (Annotated[typ, Tag(get_type_name(typ))],)
+        param_types += (param_type,)
 
-    return Annotated[_Union[args], UnionSchemaWithType, WrapSerializer(__add_tag_name), Discriminator(__get_tag_name)]
+    return Annotated[_Union[args],
+                     UnionSchemaWithType(param_types), WrapSerializer(__add_tag_name), Discriminator(__get_tag_name)]
 
 
 @_SpecialForm
@@ -90,8 +94,8 @@ def Union(_cls, types: Iterable[type]):
     other_types = ()
 
     for typ in types:
-        test_typ = get_args(typ)[0] if get_origin(typ) is Annotated else typ
-        if issubclass(test_typ, BaseModel) or is_dataclass(test_typ):
+        param_type = get_args(typ)[0] if get_origin(typ) is Annotated else typ
+        if issubclass(param_type, BaseModel) or is_dataclass(param_type):
             model_types += (typ,)
         else:
             other_types += (typ,)
@@ -132,12 +136,3 @@ class FrozenDictSchema:
 _K = TypeVar('_K')
 _V = TypeVar('_V')
 FrozenDict = Annotated[frozendict[_K, _V], FrozenDictSchema]
-
-
-__all__ = (
-    TYPE_FIELD,
-    DiscriminatedUnion,
-    FrozenDict,
-    SubclassOf,
-    Union
-)
