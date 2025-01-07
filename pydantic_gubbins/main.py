@@ -71,13 +71,13 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         for key, value in values.items():
             self.__set_descriptor_value(key, value)
 
-    def __descriptor_items(self):
-        yield from ((fld, getattr(self, fld)) for fld in self.__pydantic_descriptor_fields__)
-
     def __set_descriptor_value(self, key, value):
         if self.model_config.get('validate_assignment', False):
             self.__pydantic_validator__.validate_assignment(self.model_construct(), key, value)
         object.__setattr__(self, key, value)
+
+    def __descriptor_items(self):
+        yield from ((fld, getattr(self, fld)) for fld in self.__pydantic_descriptor_fields__)
 
     @model_serializer(mode='wrap')
     def include_descriptors(self, handler: SerializerFunctionWrapHandler) -> Any:
