@@ -68,9 +68,10 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         yield from (kv for kv in chain(self.__descriptor_items(), super().__repr_args__()))
 
     def __set_descriptor_values__(self, values: dict[str, Any]):
-        # This will be called with all descriptor values when __dict__ is assigned
+        # This will be called with all descriptor values when __dict__ is assigned or when __set_state__ is invoked
         # Override if you want custom behaviour, such as constructing a storage object
-        # Normally this only happens via __init__, where validation will already have occurred
+        # Normally this only happens via __init__, where validation will already have occurred, or __set_state__,
+        # where we assume a validated object was serialised
         for key, value in values.items():
             object.__setattr__(self, key, value)
 
