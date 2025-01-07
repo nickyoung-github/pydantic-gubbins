@@ -57,8 +57,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
     def __setstate__(self, state):
         super().__setstate__(state)
-        for key, value in state.get("__descriptor_items__", ()):
-            object.__setattr__(self, key, value)
+        if descriptor_items := state.get("__descriptor_items__"):
+            self.__set_descriptor_values__(dict(descriptor_items))
 
     def __eq__(self, other):
         return super().__eq__(other) and\
