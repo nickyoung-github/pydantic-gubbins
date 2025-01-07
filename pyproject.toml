@@ -23,9 +23,6 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 
-[project.urls]
-Homepage = "https://github.com/nickyoung-github/pydantic-gubbins"
-
 dynamic = ["version"]
 
 dependencies = [
@@ -39,6 +36,9 @@ test = [
     "pytest",
     "pytest-cov"
 ]
+
+[project.urls]
+homepage = "https://github.com/nickyoung-github/pydantic-gubbins"
 
 [tool.setuptools.dynamic]
 version = {attr = "pydantic_gubbins.__init__.__version__"}
