@@ -1,4 +1,6 @@
+from pydantic import ConfigDict, ValidationError
 from pydantic_gubbins import BaseModel
+import pytest
 from typing import Any
 
 _field_descriptor_undefined = object()
@@ -79,3 +81,17 @@ def test_serialisation():
 
     d2_new = Derived2.model_validate_json(d2.model_dump_json())
     assert d2_new == d2
+
+
+def test_assignment_validation():
+    b = Base(base_i=123)
+    b.base_i = "123"  # Works as assignment does not perform validation
+
+    class StrictBase(Base):
+        model_config = ConfigDict(validate_assignment=True)
+
+    sb = StrictBase(base_i=123)
+    sb.base_i = 321
+
+    with pytest.raises(ValidationError):
+        sb.base_1 = "321"

@@ -78,5 +78,5 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         yield from ((fld, getattr(self, fld)) for fld in self.__pydantic_descriptor_fields__)
 
     @model_serializer(mode='wrap')
-    def include_descriptors(self, handler: SerializerFunctionWrapHandler) -> Any:
+    def include_descriptor_values(self, handler: SerializerFunctionWrapHandler) -> Any:
         return {**handler(self), **dict(self.__descriptor_items())}

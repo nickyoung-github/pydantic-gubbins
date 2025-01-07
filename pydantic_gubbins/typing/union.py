@@ -28,17 +28,6 @@ class UnionSchemaWithType:
         return json_schema
 
 
-def __add_tag_name(value, handler, _info) -> dict[str, Any]:
-    return {**handler(value), TYPE_FIELD: get_type_name(type(value))}
-
-
-def __get_tag_name(value) -> str:
-    if isinstance(value, dict):
-        return value.pop(TYPE_FIELD)
-
-    return get_type_name(type(value))
-
-
 @_SpecialForm
 def DiscriminatedUnion(_cls, types: Iterable[type]):
     """
@@ -48,6 +37,16 @@ def DiscriminatedUnion(_cls, types: Iterable[type]):
 
     A tagged union of types, using the class var TYPE_KEY as the tag name, falling back to class name, if not present
     """
+
+    def add_tag_name(value, handler, _info) -> dict[str, Any]:
+        return {**handler(value), TYPE_FIELD: get_type_name(type(value))}
+
+    def get_tag_name(value) -> str:
+        if isinstance(value, dict):
+            return value.pop(TYPE_FIELD)
+
+        return get_type_name(type(value))
+
     args = ()
     param_types = ()
     for typ in types:
@@ -58,7 +57,7 @@ def DiscriminatedUnion(_cls, types: Iterable[type]):
         param_types += (param_type,)
 
     return Annotated[_Union[args],
-                     UnionSchemaWithType(param_types), WrapSerializer(__add_tag_name), Discriminator(__get_tag_name)]
+                     UnionSchemaWithType(param_types), WrapSerializer(add_tag_name), Discriminator(get_tag_name)]
 
 
 @_SpecialForm
