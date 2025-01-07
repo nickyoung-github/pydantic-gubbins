@@ -23,14 +23,14 @@ class DictDescriptor:
         dict_contents = self.__dict_ptr()(instance).contents
         prev = dict_contents.value if dict_contents else None
         typ = type(instance)
-        descriptors = []
+        descriptor_values = {}
         current = {}
 
         for key, field_value in value.items():
             try:
                 typ_value = object.__getattribute__(typ, key)
                 if hasattr(typ_value, "__get__"):
-                    descriptors.append((field_value, typ_value))
+                    descriptor_values[key] = field_value
                 else:
                     current[key] = field_value
             except AttributeError:
@@ -42,5 +42,4 @@ class DictDescriptor:
         if prev is not None:
             Py_DECREF(prev)
 
-        for field_value, descriptor in descriptors:
-            descriptor.__set__(instance, field_value)
+        instance.__set_descriptor_values__(descriptor_values)

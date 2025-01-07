@@ -32,8 +32,7 @@ I have included my own implementation of `DiscriminatedUnion`. What it does:
 
 1. Creates tagged union of the types: `Union[Annotated[t1, Tag("t1")], Annotated[t1, Tag("t2")], ...]`
 2. Adds a `WrapSerializer` to include the tag name in the serialised output
-2. Adds a `Discimator` with a callable to retrieve the tag name from the serialised form
-3. Adds a custom annotation to add the tag field to the JSON schema
+3Adds a `Discrimator` with a callable to retrieve the tag name from the serialised form
 4. Uses the type's `__name__` by default but `type.TYPE_KEY` if present
 
 ### SubclassOf
@@ -69,8 +68,8 @@ dataclasses](https://docs.python.org/3/library/dataclasses.html#descriptor-typed
 Please note that `property` or `cached_property` passed as annotations will be ignored. This is because `pydantic`
 already has special-case logic for them.
 
-1. The metaclass adds the descriptors onto the the returned type, calls `__set_name__` on all the descriptors,
-and populates `__pydantic_descriptor_fields__` on the model class
+1. The metaclass adds the descriptors onto the the returned type, calls `__set_name__` on all them,
+and populates `__pydantic_descriptor_fields__`
 2. The methods on `BaseModel` which access `__dict__` directly have been overridden to extend their functionality
 to cover descriptor fields
 3. Access to `__dict__` itself is now controlled by a descriptor. This implementation is rather low-level and possibly

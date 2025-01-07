@@ -46,8 +46,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
     def __setattr__(self, key, value):
         if key in self.__pydantic_descriptor_fields__:
-            # BaseModel overrides __setattr__ and calls self.__dict__[key] = value
-            object.__setattr__(self, key, value)
+            self.__set_descriptor_value(key, value)
         else:
             super().__setattr__(key, value)
 
@@ -63,6 +62,12 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         return super().__eq__(other) and\
             all(v1 == v2 for (_, v1), (_, v2) in zip(self.__descriptor_items(), other.__descriptor_items()))
 
+    def __set_descriptor_values__(self, values: dict[str, Any]):
+        # This will be called with all descriptor values when __dict__ is assigned.
+        # Override if you want custom behaviour, such as constructing a storage object
+        for key, value in values.items():
+            self.__set_descriptor_value(key, value)
+
     @model_serializer(mode='wrap')
     def include_descriptors(self, handler: SerializerFunctionWrapHandler) -> Any:
         return {**handler(self), **dict(self.__descriptor_items())}
@@ -72,3 +77,8 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
 
     def __descriptor_items(self):
         yield from ((fld, getattr(self, fld)) for fld in self.__pydantic_descriptor_fields__)
+
+    def __set_descriptor_value(self, key, value):
+        if self.model_config.get('validate_assignment', False):
+            self.__pydantic_validator__.validate_assignment(self.model_construct(), key, value)
+        object.__setattr__(self, key, value)
