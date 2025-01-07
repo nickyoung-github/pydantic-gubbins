@@ -23,19 +23,19 @@ class UnionSchemaWithType:
         return json_schema
 
 
-def __get_type_name(typ: type) -> str:
+def get_type_name(typ: type) -> str:
     return getattr(typ, TYPE_FIELD, typ.__name__)
 
 
 def __add_tag_name(value, handler, _info) -> dict[str, Any]:
-    return {**handler(value), TYPE_FIELD: __get_type_name(type(value))}
+    return {**handler(value), TYPE_FIELD: get_type_name(type(value))}
 
 
 def __get_tag_name(value) -> str:
     if isinstance(value, dict):
         return value.pop(TYPE_FIELD)
 
-    return __get_type_name(type(value))
+    return get_type_name(type(value))
 
 
 @_SpecialForm
@@ -52,7 +52,7 @@ def DiscriminatedUnion(_cls, types: Iterable[type]):
         test_typ = get_args(typ)[0] if get_origin(typ) is Annotated else typ
         if not issubclass(test_typ, BaseModel) and not is_dataclass(test_typ):
             raise RuntimeError(f"DiscriminatedUnion may only be used with BaseModel or dataclass types")
-        args += (Annotated[typ, Tag(__get_type_name(typ))],)
+        args += (Annotated[typ, Tag(get_type_name(typ))],)
 
     return Annotated[_Union[args], UnionSchemaWithType, WrapSerializer(__add_tag_name), Discriminator(__get_tag_name)]
 

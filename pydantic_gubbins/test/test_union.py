@@ -54,3 +54,7 @@ def test_mixed_union():
     assert len(args) == 2
     assert args[0] is int
     assert args[1] is Base
+
+    adapter2 = TypeAdapter(mixed_union2)
+    assert adapter2.validate_json(adapter1.dump_json(1)) == 1
+    assert adapter2.validate_json(adapter1.dump_json(Base())) == Base()

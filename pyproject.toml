@@ -23,6 +23,9 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 
+[project.urls]
+Homepage = "https://github.com/nickyoung-github/pydantic-gubbins"
+
 dynamic = ["version"]
 
 dependencies = [
