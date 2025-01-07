@@ -12,14 +12,14 @@
 
 ## Overview
 
-This project contains various utils for working with `pydantic`, filling in gaps in the current offering.
+This project contains various utils for working with `pydantic`.
 
 ## Typing
 
 ### DiscriminatedUnion
 
 A common pattern `pydantic` users encounter is how to serialise/deserialise a field whose type is a union of `BaseModel`
-types. This improved in V2 of `pydantic` and a various ways of implementing a discriminated union are detailed
+types. This improved in `pydantic` v2 and various ways of implementing a discriminated union are detailed
 [here](https://docs.pydantic.dev/latest/concepts/unions/#discriminated-unions-with-str-discriminators).
 However, this approach is a bit unsatisfying as:
 
@@ -32,7 +32,7 @@ I have included my own implementation of `DiscriminatedUnion`. What it does:
 
 1. Creates tagged union of the types: `Union[Annotated[t1, Tag("t1")], Annotated[t1, Tag("t2")], ...]`
 2. Adds a `WrapSerializer` to include the tag name in the serialised output
-3Adds a `Discrimator` with a callable to retrieve the tag name from the serialised form
+3. Adds a `Discrimator` with a callable to retrieve the tag name from the serialised form
 4. Uses the type's `__name__` by default but `type.TYPE_KEY` if present
 
 ### SubclassOf
