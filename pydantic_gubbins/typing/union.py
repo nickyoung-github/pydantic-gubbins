@@ -46,7 +46,7 @@ def DiscriminatedUnion(_cls, types: Iterable[type]):
     :param types:
     :return: Annotated[Union[types], ...]
 
-    A tagged union of types, using tge class var TYPE_KEY as the tag name, falling back to class name, if not present
+    A tagged union of types, using the class var TYPE_KEY as the tag name, falling back to class name, if not present
     """
     args = ()
     param_types = ()
@@ -105,12 +105,12 @@ def Union(_cls, types: Iterable[type]):
     elif len(model_types) == 1:
         return _Union[other_types + model_types]
     else:
-        discrinated_union = DiscriminatedUnion[model_types]
+        discriminated_union = DiscriminatedUnion[model_types]
 
         if other_types:
-            return _Union[Union[other_types], discrinated_union]
+            return _Union[Union[other_types], discriminated_union]
         else:
-            return discrinated_union
+            return discriminated_union
 
 
 class FrozenDictSchema:
