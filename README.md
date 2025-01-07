@@ -68,10 +68,10 @@ dataclasses](https://docs.python.org/3/library/dataclasses.html#descriptor-typed
 Please note that `property` or `cached_property` passed as annotations will be ignored. This is because `pydantic`
 already has special-case logic for them.
 
-1. The metaclass adds the descriptors onto the the returned type, calls `__set_name__` on all them,
+1. The metaclass adds the descriptors onto the the returned type, calls `__set_name__` on them,
 and populates `__pydantic_descriptor_fields__`
 2. The methods on `BaseModel` which access `__dict__` directly have been overridden to extend their functionality
-to cover descriptor fields
+to include descriptor fields
 3. Access to `__dict__` itself is now controlled by a descriptor. This implementation is rather low-level and possibly
 inadvisable. The same result might be achieved by using a model validator, however, there are many places
 in `pydantic` and `pydantic-core` where `__dict__` is accessed directly and I'm not convinced all would be covered by
