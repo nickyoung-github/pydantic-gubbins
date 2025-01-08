@@ -49,6 +49,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
             if self.model_config.get('validate_assignment', False):
                 self.__pydantic_validator__.validate_assignment(self.model_construct(), key, value)
             object.__setattr__(self, key, value)
+            self.__pydantic_fields_set__.add(key)
         else:
             super().__setattr__(key, value)
 
@@ -59,6 +60,7 @@ class BaseModel(_BaseModel, metaclass=ModelMetaclass):
         super().__setstate__(state)
         if descriptor_items := state.get("__descriptor_items__"):
             self.__set_descriptor_values__(dict(descriptor_items))
+            self.__pydantic_fields_set__.update(k for k, _ in descriptor_items)
 
     def __eq__(self, other):
         return super().__eq__(other) and\
