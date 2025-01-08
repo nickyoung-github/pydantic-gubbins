@@ -9,14 +9,11 @@ from .descriptors import DictDescriptor
 
 class ModelMetaclass(_ModelMetaClass):
     def __new__(cls, cls_name: str, bases: tuple[type[Any], ...], namespace: dict[str, Any], **kwargs):
-        descriptors = {}
+        descriptors = {n: object.__getattribute__(b, n)
+                       for b in bases if issubclass(b, _BaseModel)
+                       for n in getattr(b, "__pydantic_descriptor_fields__", ())}
 
-        for base in bases:
-            if issubclass(base, _BaseModel):
-                for name in getattr(base, "__pydantic_descriptor_fields__", ()):
-                    descriptors[name] = object.__getattribute__(base, name)
-
-        for name, typ in namespace.get("__annotations__", {}).items():
+        for name in namespace.get("__annotations__", {}).keys():
             value = namespace.get(name)
             if hasattr(value, "__get__") and not isinstance(value, (property, cached_property)):
                 descriptors[name] = value
