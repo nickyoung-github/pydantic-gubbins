@@ -1,14 +1,14 @@
 from functools import cached_property
 from itertools import chain
 from pydantic import BaseModel as _BaseModel, SerializerFunctionWrapHandler, model_serializer
-from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaClass
-from typing import Any, ClassVar
+from pydantic._internal._model_construction import ModelMetaclass as _ModelMetaclass
+from typing import Any, ClassVar, cast
 
 from .descriptors import DictDescriptor
 
 
-class ModelMetaclass(_ModelMetaClass):
-    def __new__(cls, cls_name: str, bases: tuple[type[Any], ...], namespace: dict[str, Any], **kwargs):
+class ModelMetaclass(_ModelMetaclass):
+    def __new__(cls, cls_name: str, bases: tuple[type[Any], ...], namespace: dict[str, Any], **kwargs) -> type[_BaseModel]:
         descriptors = {n: object.__getattribute__(b, n)
                        for b in bases if issubclass(b, _BaseModel)
                        for n in getattr(b, "__pydantic_descriptor_fields__", ())}
@@ -22,7 +22,7 @@ class ModelMetaclass(_ModelMetaClass):
         if descriptors:
             namespace["__dict__"] = DictDescriptor()
 
-        ret = super().__new__(cls, cls_name, bases, namespace, **kwargs)
+        ret = cast(type[_BaseModel], super().__new__(cls, cls_name, bases, namespace, **kwargs))
 
         if descriptors:
             # We need this step as collect_model_fields() deletes descriptors
@@ -30,7 +30,7 @@ class ModelMetaclass(_ModelMetaClass):
                 descriptor.__set_name__(ret, name)
 
                 try:
-                    ret.model_fields[name].default = descriptor.__get__(None, ret)
+                    ret.__pydantic_fields__[name].default = descriptor.__get__(None, ret)
                 except AttributeError:
                     pass
 
